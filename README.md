@@ -30,46 +30,40 @@ Runs locally to automatically fill empty Anki cards with definitions, examples, 
 
 ---
 
-
-## Installation
+## Quick Start (macOS)
+### Clone the repo
 ```bash
-git clone https://github.com/<you>/autoanki.git
+git clone https://github.com/well-balanced/autoanki.git
 cd autoanki
+open .
+```
+### (Recommended) `start.command`
+Open Finder and Double-click `start.command`
+1. First run will ask for your OPENAI_API_KEY (entered in the terminal).
+2. It will also check AnkiConnect availability.
+3. Then it starts AutoAnki.
+
+### or Clone the repo and install deps:
+```bash
 pip install -r requirements.txt
-```
-
----
-
-
-## Configuration
-Create .env in the project root:
-```
-OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
-# For local/OpenAI-compatible servers (optional)
-# OPENAI_API_BASE=http://localhost:11434/v1
-OPENAI_MODEL=gpt-4o-mini
-
-# Optional field overrides (default: Front/Back)
-# FRONT_FIELD=Front
-# BACK_FIELD=Back
-```
-> Deck selection: in the current script, edit TARGET_DECKS inside main()
-> e.g. TARGET_DECKS = ["Wynn's TOEIC Vocab", "Another Deck"].
-
----
-
-
-## Usage
-Keep Anki open. Then run:
-```sh
 python3 main.py
 ```
 
-What it does every cycle (default: every 5s):
-	1.	Scans TARGET_DECKS for notes where BACK_FIELD is empty.
-	2.	Sends the front (word) to the LLM with your prompt.
-	3.	Writes the generated result to the note (replacing newlines with <br>).
-	4.	Repeats after LOOP_DELAY_SECONDS.
+and you need to create a `.env` file and fill like below
+```
+OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxx
+OPENAI_MODEL=gpt-4o-mini
+```
+
+
+---
+
+
+## What It Does (each cycle)
+	1.	Fetches all decks from AnkiConnect.
+	2.	Finds notes where **BACK_FIELD is empty.**
+	3.	Sends the front (word) to the LLM with your prompt.
+	4.	Sleeps for LOOP_DELAY_SECONDS and repeats.
 
 
 ---
