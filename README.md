@@ -93,7 +93,3 @@ Anki (running) ↔ AnkiConnect (localhost:8765) ←→ AutoAnki (this script) �
 ```
 - AnkiConnect exposes a local HTTP API.
 - AutoAnki queries notes with empty BACK_FIELD, calls your LLM, then updates notes via updateNoteFields.
-
-
-## License
-MIT — do whatever you want, attribution appreciated.
