@@ -64,17 +64,16 @@ def generate_fields_via_llm(client: OpenAI, word: str, model: str) -> str:
 
 
 def main():
-    TARGET_DECKS = ["Wynn's TOEIC Vocab"]
     BATCH_SIZE = 1000
     FRONT_FIELD = os.getenv("FRONT_FIELD", "Front")
     BACK_FIELD = os.getenv("BACK_FIELD", "Back")
-
-    client = get_llm_client()
-    model_hint = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-
+    TARGET_DECKS = anki("deckNames")
     note_ids = []
     for deck in TARGET_DECKS:
         note_ids.extend(anki("findNotes", query=f'deck:"{deck}"'))
+
+    client = get_llm_client()
+    model_hint = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     targets: List[Dict[str, Any]] = []
     for batch in chunked(note_ids, BATCH_SIZE):
