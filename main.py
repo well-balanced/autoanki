@@ -74,6 +74,8 @@ def main():
     FRONT_FIELD = os.getenv("FRONT_FIELD", "Front")
     BACK_FIELD = os.getenv("BACK_FIELD", "Back")
     CONTEXT_FIELD = os.getenv("CONTEXT_FIELD", "Context")
+    YOUGLISH_FIELD = os.getenv("YOUGLISH_FIELD", "Youglish")
+    YOUGLISH_BASE = "https://youglish.com/pronounce/{}/english?"
     TARGET_DECKS = anki("deckNames")
     note_ids = []
     for deck in TARGET_DECKS:
@@ -118,6 +120,7 @@ def main():
 
         update_fields = {
             BACK_FIELD: ret_txt.replace("\n", "<br>"),
+            YOUGLISH_FIELD: f'<a href="{YOUGLISH_BASE.format(word)}">{word}</a>',
         }
 
         if not update_fields:
