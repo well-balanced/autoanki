@@ -42,13 +42,19 @@ def get_llm_client():
     return OpenAI(api_key=api_key)
 
 
-def generate_fields_via_llm(client: OpenAI, word: str, model: str) -> str:
-    if word in LLM_CACHE:
-        print(f"[CACHE] hit: {word}")
-        return LLM_CACHE[word]
+def generate_fields_via_llm(
+    client: OpenAI, word: str, model: str, context: str | None = None
+) -> str:
+    cache_key = (word, context or "")
+    if cache_key in LLM_CACHE:
+        print(f"[CACHE] hit: {cache_key}")
+        return LLM_CACHE[cache_key]
 
     system = FILL_CARD_BACK_PROMPT
-    user = f"{word}".strip()
+    if context:
+        user = f"{word}\n{context}".strip()
+    else:
+        user = f"{word}".strip()
 
     resp = client.chat.completions.create(
         model=os.getenv("OPENAI_MODEL", model),
@@ -59,7 +65,7 @@ def generate_fields_via_llm(client: OpenAI, word: str, model: str) -> str:
     )
     txt = resp.choices[0].message.content
     if txt:
-        LLM_CACHE[word] = txt
+        LLM_CACHE[cache_key] = txt
     return txt or ""
 
 
@@ -67,6 +73,7 @@ def main():
     BATCH_SIZE = 1000
     FRONT_FIELD = os.getenv("FRONT_FIELD", "Front")
     BACK_FIELD = os.getenv("BACK_FIELD", "Back")
+    CONTEXT_FIELD = os.getenv("CONTEXT_FIELD", "Context")
     TARGET_DECKS = anki("deckNames")
     note_ids = []
     for deck in TARGET_DECKS:
@@ -80,21 +87,33 @@ def main():
         notes = anki("notesInfo", notes=batch)
         for n in notes:
             fields = n.get("fields", {})
+            if BACK_FIELD not in fields:
+                continue
+
             front_val = (fields.get(FRONT_FIELD, {}).get("value") or "").strip()
+            context_val = (fields.get(CONTEXT_FIELD, {}).get("value") or "").strip()
             target_val = (fields.get(BACK_FIELD, {}).get("value") or "").strip()
             if not front_val:
                 continue
             if target_val:
                 continue
-            targets.append({"id": n["noteId"], "front": front_val, "fields": fields})
+            targets.append(
+                {
+                    "id": n["noteId"],
+                    "front": front_val,
+                    "context": context_val,
+                    "fields": fields,
+                }
+            )
 
     print(f"Found {len(targets)} notes in decks '{', '.join(TARGET_DECKS)}'.")
 
     updated = 0
     for t in targets:
         word = t["front"]
+        context = t["context"]
         print("[LLM] Generating for ", word)
-        ret_txt = generate_fields_via_llm(client, word, model_hint)
+        ret_txt = generate_fields_via_llm(client, word, model_hint, context)
         print("[LLM] Generated: ", ret_txt)
 
         update_fields = {
